@@ -5,6 +5,10 @@ const $episodesArea = $("#episodesArea");
 const $searchForm = $("#searchForm");
 const $episodesList = $("#episodesList");
 
+// add global constants here for urls
+const SHOWS_API_URL = "http://api.tvmaze.com/search/shows";
+const BROKEN_IMG_URL = "https://tinyurl.com/tv-missing";
+
 /** Given a search term, search for tv shows that match that query.
  *
  *  Returns (promise) array of show objects: [show, show, ...].
@@ -14,11 +18,23 @@ const $episodesList = $("#episodesList");
 
 async function getShowsByTerm(searchTerm) {
   // ADD: Remove placeholder & make request to TVMaze search shows API.
-  const shows = await axios.get("http://api.tvmaze.com/search/shows", {
+  const showsAPIResponse = await axios.get(SHOWS_API_URL, {
     params: { q: searchTerm },
   });
 
-  return shows.data;
+  console.log(showsAPIResponse.data);
+
+  const shows = showsAPIResponse.data.map((show) => {
+    return {
+      id: show.show.id,
+      name: show.show.name,
+      summary: show.show.summary,
+      image: show.show.image?.medium || BROKEN_IMG_URL,
+    };
+  });
+
+  return shows;
+
   //  [
   //   // {
   //   //   id: 1767,
@@ -44,17 +60,17 @@ async function getShowsByTerm(searchTerm) {
 function populateShows(shows) {
   $showsList.empty();
 
-  for (let show of shows) {
+  for (let { id, name, summary, image } of shows) {
     const $show = $(
-      `<div data-show-id="${show.show.id}" class="Show col-md-12 col-lg-6 mb-4">
+      `<div data-show-id="${id}" class="Show col-md-12 col-lg-6 mb-4">
          <div class="media">
            <img
-              src=${show.show.image.original}
+              src=${image}
               alt=https://tinyurl.com/tv-missing
               class="w-25 me-3">
            <div class="media-body">
-             <h5 class="text-primary">${show.show.name}</h5>
-             <div><small>${show.show.summary}</small></div>
+             <h5 class="text-primary">${name}</h5>
+             <div><small>${summary}</small></div>
              <button class="btn btn-outline-light btn-sm Show-getEpisodes">
                Episodes
              </button>
